@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cumpleaños de Jazu — Invitación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef } = React;
+
+/* ============================================================================
+   1) CONFIGURACIÓN — TODO LO QUE PODÉS EDITAR ESTÁ ACÁ ADENTRO.
+   No hace falta tocar nada más abajo en el archivo para cambiar el contenido.
+   ========================================================================== */
+const CONFIG = {
+  // --- Datos principales ---
+  nombre: "Jazu",
+  edad: 15, // TODO: se muestra solo el número, sin la palabra "años"
+  fecha: "2 de Septiembre 2026", // texto que se muestra
+  fechaISO: "2026-09-02T18:00:00", // TODO: misma fecha/hora, en formato ISO (para la cuenta regresiva)
+  horaInicio: "18:00",
+  horaFin: "22:00",
+  lugarNombre: "Diez55",
+  direccion: "Dirección de ejemplo 1055, Campana, Buenos Aires", // TODO: reemplazar por la dirección real
+  googleMapsUrl: "https://maps.app.goo.gl/X38sSFzE7nTmrp4w9",
+  albumUrl: "https://guestdrop.app/u/cmsqw17wi0001jp04gef1ohax",
+  hashtag: "#Jazu15", // TODO
+
+  quote: {
+    texto: "El amor que mueve el sol y las demás estrellas.",
+    autor: "Dante Alighieri",
+  },
+
+  invitacionTexto:
+    "Hay momentos que merecen ser compartidos. Este cumpleaños es uno de ellos. Quiero celebrar un nuevo año de vida rodeada de las personas que forman parte de mi historia, y me encantaría que vos fueras parte de esta celebración.",
+
+  // --- Línea de tiempo del evento ---
+  timeline: [
+    { hora: "18:00", titulo: "Llegada", desc: "Recepción con bienvenida y primeras fotos." },
+    { hora: "18:30", titulo: "Comienza la celebración", desc: "Arranca la fiesta oficialmente." },
+    { hora: "19:30", titulo: "Comida", desc: "Nos sentamos a compartir la mesa." },
+    { hora: "20:30", titulo: "Dinámicas", desc: "Juegos y actividades para todos." },
+    { hora: "21:30", titulo: "Momento especial", desc: "HORARIO CLASIFICADO", clasificado: true },
+    { hora: "22:00", titulo: "Fiesta", desc: "Música, baile y celebración." },
+  ],
+
+  // --- Dinámicas / juegos ---
+  dinamicas: [
+    {
+      numero: "01",
+      nombre: "Rompehielos express",
+      desc: "Una ronda rápida de preguntas para conocer curiosidades de todos los invitados.",
+      duracion: "15 min",
+      participantes: "Todos",
+    },
+    {
+      numero: "02",
+      nombre: "¿Quién conoce mejor a la cumpleañera?",
+      desc: "Trivia sobre anécdotas y gustos, con premio para quien más acierte.",
+      duracion: "20 min",
+      participantes: "Grupos de 4",
+    },
+    {
+      numero: "03",
+      nombre: "Mensajes para el futuro",
+      desc: "Cada invitado escribe un deseo o consejo que se abrirá el próximo cumpleaños.",
+      duracion: "10 min",
+      participantes: "Individual",
+    },
+  ],
+
+  desafioFotos: [
+    "Una foto con la cumpleañera",
+    "Una foto con todo tu grupo",
+    "Una foto con alguien que conociste ese día",
+    "Recrear una foto vieja",
+    "Una foto completamente absurda",
+    "Una foto que represente la noche",
+  ],
+
+  // --- Código de vestimenta ---
+  dressCode: {
+    tema: "Libre y casual",
+    recomendado: ["Ropa cómoda", "Lo que ya tengas en el placard", "Calzado cómodo para bailar"],
+    evitar: ["No hay restricciones — vení como quieras"],
+  },
+
+  // --- Regalos ---
+  regalos: {
+    usar: ["Una agenda", "Un libro", "Utilería"],
+    creativo: ["Carta", "Dibujo", "Álbum de fotos", "Algo hecho a mano"],
+    deseos: ["Pelota de vóley", "Un libro con dedicatoria", "Aporte a mi fondo de ahorros — MP: jazminfernandezv.mp"],
+    experiencias: ["Una salida juntos", "Una clase o taller"],
+  },
+
+  // --- Comida y bebida ---
+  comida: {
+    comida: ["Entradas variadas", "Plato principal", "Opción vegetariana"],
+    bebidas: ["Gaseosas", "Agua saborizada"],
+    postre: ["Torta de cumpleaños", "Mesa dulce"],
+  },
+
+  comoLlegar: {
+    auto: "Estacionamiento disponible en la cuadra del salón.",
+  },
+
+  antesDeVenir: [
+    "Respetemos a todos los invitados.",
+    "Nadie está obligado a participar de una dinámica.",
+    "Preguntá antes de publicar fotos de otra persona.",
+    "Cuidemos el lugar.",
+    "Si vas a llegar tarde, avisá.",
+  ],
+
+  faqs: [
+    { pregunta: "¿Puedo llevar a alguien?", respuesta: "No, la invitación es personal." },
+    { pregunta: "¿Tengo que llevar algo?", respuesta: "Con tu presencia alcanza. Si querés traer algo, mirá la sección de regalos." },
+    { pregunta: "¿Qué tengo que ponerme?", respuesta: "Revisá la sección '¿Qué me pongo?': el dress code es libre y casual." },
+    { pregunta: "¿A qué hora tengo que llegar?", respuesta: "La recepción arranca a las " + "18:00" + " hs." },
+    { pregunta: "¿Hay estacionamiento?", respuesta: "Sí, hay lugar para estacionar cerca del salón." },
+    { pregunta: "¿Puedo sacar fotos?", respuesta: "¡Por favor hacelo! Sumalas al álbum compartido." },
+    { pregunta: "¿Puedo llevar un regalo?", respuesta: "No es necesario, pero si querés hacerlo hay ideas en la sección de regalos." },
+    { pregunta: "¿Qué pasa si finalmente no puedo ir?", respuesta: "Avisanos con anticipación así podemos organizar mejor todo." },
+    { pregunta: "¿Hasta qué hora dura?", respuesta: "El festejo termina alrededor de las 22:00 hs." },
+  ],
+
+  navegacion: [
+    { id: "inicio", label: "Inicio" },
+    { id: "celebracion", label: "Celebración" },
+    { id: "plan", label: "El plan" },
+    { id: "dinamicas", label: "Dinámicas" },
+    { id: "vestimenta", label: "Vestimenta" },
+    { id: "regalos", label: "Regalos" },
+    { id: "ubicacion", label: "Ubicación" },
+  ],
+};
+
+/* ============================================================================
+   2) PALETA DE COLORES Y TIPOGRAFÍAS — cambiá los valores acá.
+   ========================================================================== */
+const THEME = {
+  cream: "#FBF1E1",
+  creamSoft: "#F5E6C8",
+  maroon: "#6E1423",
+  maroonDeep: "#4A0E18",
+  brick: "#9C2B3C",
+  blush: "#E7B3AE",
+  ink: "#3A2418",
+  inkSoft: "#6B4A3D",
+};
+
+const FONT_DISPLAY = "'Caveat', cursive"; // nombre, números grandes
+const FONT_HAND = "'Patrick Hand', cursive"; // títulos y etiquetas
+const FONT_BODY = "'Quicksand', sans-serif"; // texto de lectura
+
+/* ============================================================================
+   3) UTILIDADES
+   ========================================================================== */
+function scallopedPath(cx, cy, rx, ry, bumps, depth) {
+  const pts = [];
+  const steps = bumps * 8;
+  for (let i = 0; i <= steps; i++) {
+    const a = (i / steps) * Math.PI * 2;
+    const wobble = 1 + depth * Math.sin(a * bumps);
+    const x = cx + rx * wobble * Math.cos(a);
+    const y = cy + ry * wobble * Math.sin(a);
+    pts.push(`${x.toFixed(1)},${y.toFixed(1)}`);
+  }
+  return `M ${pts.join(" L ")} Z`;
+}
+
+function useCountdown(targetISO) {
+  const [left, setLeft] = useState(() => Math.max(0, new Date(targetISO) - new Date()));
+  useEffect(() => {
+    const t = setInterval(() => {
+      setLeft(Math.max(0, new Date(targetISO) - new Date()));
+    }, 1000);
+    return () => clearInterval(t);
+  }, [targetISO]);
+  const s = Math.floor(left / 1000);
+  return {
+    dias: Math.floor(s / 86400),
+    horas: Math.floor((s % 86400) / 3600),
+    min: Math.floor((s % 3600) / 60),
+    seg: s % 60,
+    llego: left <= 0,
+  };
+}
+
+function useReveal() {
+  const ref = useRef(null);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setShown(true);
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.15 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, shown];
+}
+
+/* ============================================================================
+   4) COMPONENTES BASE
+   ========================================================================== */
+function Star({ style }) {
+  return (
+    <span aria-hidden style={{ position: "absolute", color: THEME.blush, fontSize: 18, opacity: 0.9, ...style }}>
+      ✦
+    </span>
+  );
+}
+
+function JasmineFlower({ style, size = 40, rotate = 0 }) {
+  // Flor de jazmín decorativa: pétalos suaves en forma de gota + hojitas + centro cálido.
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 120 120"
+      width={size}
+      height={size}
+      style={{ position: "absolute", ...style }}
+    >
+      <g transform={`rotate(${rotate} 60 60)`}>
+        {/* hojas */}
+        <path d="M60 78 C48 88 40 98 40 108 C52 106 60 96 60 78 Z" fill={THEME.brick} opacity="0.35" />
+        <path d="M60 78 C72 88 80 98 80 108 C68 106 60 96 60 78 Z" fill={THEME.brick} opacity="0.35" />
+        {/* pétalos */}
+        {[0, 72, 144, 216, 288].map((deg) => (
+          <path
+            key={deg}
+            d="M60 60 C52 46 52 22 60 10 C68 22 68 46 60 60 Z"
+            fill={THEME.cream}
+            stroke={THEME.brick}
+            strokeWidth="1.2"
+            opacity="0.96"
+            transform={`rotate(${deg} 60 60)`}
+          />
+        ))}
+        {/* centro */}
+        <circle cx="60" cy="60" r="8" fill={THEME.blush} stroke={THEME.brick} strokeWidth="1.2" />
+        <circle cx="60" cy="60" r="3" fill={THEME.brick} opacity="0.6" />
+      </g>
+    </svg>
+  );
+}
+
+function Reveal({ children, className = "", delay = 0 }) {
+  const [ref, shown] = useReveal();
+  return (
+    <div
+      ref={ref}
+      className={className}
+      style={{
+        opacity: shown ? 1 : 0,
+        transform: shown ? "translateY(0px)" : "translateY(24px)",
+        transition: `opacity 0.8s ease ${delay}ms, transform 0.8s ease ${delay}ms`,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+function ScallopFrame({ size = 320, children }) {
+  const cx = size / 2,
+    cy = size / 2 * 1.25;
+  const path = scallopedPath(cx, cy, size * 0.46, size * 0.58, 18, 0.045);
+  return (
+    <div style={{ position: "relative", width: size, height: size * 1.25, maxWidth: "88vw" }}>
+      <svg
+        viewBox={`0 0 ${size} ${size * 1.25}`}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
+      >
+        <path d={path} fill={THEME.cream} stroke={THEME.maroon} strokeWidth="3" />
+      </svg>
+      <div
+        style={{
+          position: "absolute",
+          inset: "10%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          textAlign: "center",
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function SectionTitle({ eyebrow, title }) {
+  return (
+    <div className="mb-8 text-center">
+      {eyebrow && (
+        <p
+          className="mb-2 tracking-widest uppercase text-sm"
+          style={{ color: THEME.brick, fontFamily: FONT_BODY, letterSpacing: "0.2em" }}
+        >
+          {eyebrow}
+        </p>
+      )}
+      <h2 style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: "clamp(28px,5vw,44px)" }}>{title}</h2>
+      <div className="mx-auto mt-3" style={{ width: 60, height: 2, background: THEME.brick, opacity: 0.6 }} />
+    </div>
+  );
+}
+
+function Card({ children, style }) {
+  return (
+    <div
+      className="p-6 rounded-2xl"
+      style={{
+        background: THEME.cream,
+        border: `2px solid ${THEME.maroon}22`,
+        boxShadow: "0 6px 0 rgba(110,20,35,0.08)",
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ============================================================================
+   5) SECCIONES
+   ========================================================================== */
+function Nav({ activeIsScrolled }) {
+  const [open, setOpen] = useState(false);
+  const go = (id) => {
+    setOpen(false);
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
+  return (
+    <nav
+      className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-5 py-3"
+      style={{
+        background: activeIsScrolled ? THEME.cream : "transparent",
+        borderBottom: activeIsScrolled ? `2px solid ${THEME.maroon}22` : "2px solid transparent",
+        transition: "all 0.3s ease",
+      }}
+    >
+      <button
+        onClick={() => go("inicio")}
+        style={{ fontFamily: FONT_DISPLAY, color: THEME.maroon, fontSize: 26, fontWeight: 700 }}
+      >
+        {CONFIG.nombre} ✦
+      </button>
+      <div className="hidden md:flex gap-6">
+        {CONFIG.navegacion.map((n) => (
+          <button
+            key={n.id}
+            onClick={() => go(n.id)}
+            className="text-sm uppercase tracking-wide"
+            style={{ fontFamily: FONT_BODY, color: THEME.ink, letterSpacing: "0.08em" }}
+          >
+            {n.label}
+          </button>
+        ))}
+      </div>
+      <button className="md:hidden text-2xl" style={{ color: THEME.maroon }} onClick={() => setOpen(!open)}>
+        {open ? "✕" : "☰"}
+      </button>
+      {open && (
+        <div
+          className="md:hidden absolute top-full left-0 right-0 flex flex-col p-4 gap-3"
+          style={{ background: THEME.cream, borderBottom: `2px solid ${THEME.maroon}22` }}
+        >
+          {CONFIG.navegacion.map((n) => (
+            <button
+              key={n.id}
+              onClick={() => go(n.id)}
+              className="text-left text-base py-1"
+              style={{ fontFamily: FONT_BODY, color: THEME.ink }}
+            >
+              {n.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </nav>
+  );
+}
+
+function Hero() {
+  const cd = useCountdown(CONFIG.fechaISO);
+  const go = () => document.getElementById("celebracion")?.scrollIntoView({ behavior: "smooth" });
+  return (
+    <section
+      id="inicio"
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-20 relative overflow-hidden"
+      style={{
+        background: `repeating-linear-gradient(90deg, ${THEME.maroonDeep} 0px, ${THEME.maroonDeep} 26px, ${THEME.maroon} 26px, ${THEME.maroon} 52px)`,
+      }}
+    >
+      <Star style={{ top: "8%", left: "10%" }} />
+      <Star style={{ top: "14%", right: "12%", fontSize: 26 }} />
+      <Star style={{ bottom: "16%", left: "16%", fontSize: 14 }} />
+      <Star style={{ bottom: "10%", right: "18%" }} />
+      <JasmineFlower style={{ top: "-4%", left: "-6%" }} size={160} rotate={-15} />
+      <JasmineFlower style={{ bottom: "-6%", right: "-5%" }} size={190} rotate={20} />
+      <JasmineFlower style={{ top: "6%", right: "-4%" }} size={110} rotate={35} />
+      <JasmineFlower style={{ bottom: "10%", left: "-3%" }} size={100} rotate={-25} />
+
+      <p
+        className="text-center italic mb-8 px-4"
+        style={{ color: THEME.cream, fontFamily: FONT_BODY, maxWidth: 480, opacity: 0.9 }}
+      >
+        “{CONFIG.quote.texto}”
+        <br />
+        <span className="not-italic text-sm">— {CONFIG.quote.autor}</span>
+      </p>
+
+      <ScallopFrame size={320}>
+        <p style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 13, letterSpacing: "0.15em" }} className="uppercase mb-1">
+          Estás invitado/a a
+        </p>
+        <h1 style={{ fontFamily: FONT_DISPLAY, color: THEME.maroon, fontSize: "clamp(48px,12vw,80px)", lineHeight: 0.95 }}>
+          {CONFIG.nombre}
+        </h1>
+        <p style={{ fontFamily: FONT_DISPLAY, color: THEME.brick, fontSize: 40, lineHeight: 1 }}>{CONFIG.edad} años</p>
+        <p style={{ fontFamily: FONT_BODY, color: THEME.ink, fontSize: 14, marginTop: 8 }}>
+          {CONFIG.fecha}
+          <br />
+          {CONFIG.horaInicio} hs
+        </p>
+      </ScallopFrame>
+
+      {/* Cuenta regresiva */}
+      <div className="flex gap-3 mt-10">
+        {[
+          ["Días", cd.dias],
+          ["Hs", cd.horas],
+          ["Min", cd.min],
+          ["Seg", cd.seg],
+        ].map(([label, val]) => (
+          <div
+            key={label}
+            className="flex flex-col items-center justify-center rounded-xl"
+            style={{ background: THEME.cream, width: 62, height: 62, border: `2px solid ${THEME.blush}` }}
+          >
+            <span style={{ fontFamily: FONT_DISPLAY, fontSize: 26, color: THEME.maroon, lineHeight: 1 }}>
+              {String(val).padStart(2, "0")}
+            </span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 9, color: THEME.inkSoft, letterSpacing: "0.08em" }} className="uppercase">
+              {label}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={go}
+        className="mt-10 px-8 py-3 rounded-full uppercase text-sm tracking-widest"
+        style={{ fontFamily: FONT_BODY, background: THEME.cream, color: THEME.maroon, letterSpacing: "0.1em", boxShadow: "0 6px 0 rgba(0,0,0,0.2)" }}
+      >
+        ✦ Entrar a la celebración
+      </button>
+    </section>
+  );
+}
+
+function Invitacion() {
+  return (
+    <section id="celebracion" className="px-6 py-24 relative overflow-hidden" style={{ background: THEME.cream }}>
+      <JasmineFlower style={{ top: "-5%", right: "-4%" }} size={100} rotate={15} />
+      <Reveal>
+        <SectionTitle eyebrow="La invitación" title="Una noche para celebrar" />
+        <p
+          className="text-center mx-auto mb-12"
+          style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, maxWidth: 560, lineHeight: 1.7 }}
+        >
+          {CONFIG.invitacionTexto}
+        </p>
+      </Reveal>
+      <div className="grid sm:grid-cols-3 gap-5 max-w-3xl mx-auto">
+        {[
+          ["Fecha", CONFIG.fecha],
+          ["Hora", `${CONFIG.horaInicio} a ${CONFIG.horaFin} hs`],
+          ["Lugar", CONFIG.lugarNombre],
+        ].map(([label, val]) => (
+          <Card key={label} style={{ textAlign: "center" }}>
+            <p style={{ fontFamily: FONT_HAND, color: THEME.brick, fontSize: 20 }}>{label}</p>
+            <p style={{ fontFamily: FONT_BODY, color: THEME.ink, marginTop: 6 }}>{val}</p>
+          </Card>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Plan() {
+  return (
+    <section id="plan" className="px-6 py-24" style={{ background: THEME.creamSoft }}>
+      <Reveal>
+        <SectionTitle eyebrow="Cronograma" title="El plan de la noche" />
+      </Reveal>
+      <div className="max-w-xl mx-auto">
+        {CONFIG.timeline.map((item, i) => (
+          <Reveal key={i} delay={i * 80}>
+            <div className="flex gap-4 pb-8 relative">
+              <div className="flex flex-col items-center">
+                <div
+                  className="rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ width: 14, height: 14, background: THEME.brick }}
+                />
+                {i < CONFIG.timeline.length - 1 && (
+                  <div style={{ width: 2, flex: 1, background: `${THEME.brick}44` }} />
+                )}
+              </div>
+              <div className="pb-2">
+                <p style={{ fontFamily: FONT_DISPLAY, color: THEME.maroon, fontSize: 26, lineHeight: 1 }}>
+                  {item.hora}
+                </p>
+                {item.clasificado ? (
+                  <>
+                    <p style={{ fontFamily: FONT_HAND, color: THEME.brick, fontSize: 18 }}>HORARIO CLASIFICADO</p>
+                    <p style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 14 }}>
+                      Hay cosas que vas a tener que descubrir.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ fontFamily: FONT_HAND, color: THEME.ink, fontSize: 18 }}>{item.titulo}</p>
+                    <p style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 14 }}>{item.desc}</p>
+                  </>
+                )}
+              </div>
+            </div>
+          </Reveal>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Dinamicas() {
+  const [done, setDone] = useState(() => new Set());
+  const toggle = (i) => {
+    setDone((prev) => {
+      const next = new Set(prev);
+      next.has(i) ? next.delete(i) : next.add(i);
+      return next;
+    });
+  };
+  return (
+    <section id="dinamicas" className="px-6 py-24" style={{ background: THEME.cream }}>
+      <Reveal>
+        <SectionTitle eyebrow="Actividades" title="Dinámicas y juegos" />
+      </Reveal>
+      <div className="grid sm:grid-cols-3 gap-5 max-w-4xl mx-auto mb-16">
+        {CONFIG.dinamicas.map((d) => (
+          <Card key={d.numero}>
+            <p style={{ fontFamily: FONT_DISPLAY, color: THEME.blush, fontSize: 36, lineHeight: 1 }}>{d.numero}</p>
+            <p style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 19, marginTop: 4 }}>{d.nombre}</p>
+            <p style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 14, marginTop: 6, lineHeight: 1.5 }}>
+              {d.desc}
+            </p>
+            <div className="flex gap-3 mt-4 text-xs" style={{ fontFamily: FONT_BODY, color: THEME.brick }}>
+              <span>⏱ {d.duracion}</span>
+              <span>👥 {d.participantes}</span>
+            </div>
+          </Card>
+        ))}
+      </div>
+
+      <Reveal>
+        <div className="max-w-md mx-auto">
+          <p className="text-center mb-4" style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 22 }}>
+            Desafío de fotos
+          </p>
+          <div className="flex flex-col gap-2">
+            {CONFIG.desafioFotos.map((f, i) => (
+              <button
+                key={i}
+                onClick={() => toggle(i)}
+                className="flex items-center gap-3 text-left px-4 py-3 rounded-xl"
+                style={{
+                  fontFamily: FONT_BODY,
+                  background: done.has(i) ? THEME.maroon : THEME.creamSoft,
+                  color: done.has(i) ? THEME.cream : THEME.ink,
+                  border: `2px solid ${THEME.maroon}22`,
+                  textDecoration: done.has(i) ? "line-through" : "none",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <span>{done.has(i) ? "★" : "☆"}</span>
+                {f}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Reveal>
+    </section>
+  );
+}
+
+function Vestimenta() {
+  return (
+    <section id="vestimenta" className="px-6 py-24" style={{ background: THEME.creamSoft }}>
+      <Reveal>
+        <SectionTitle eyebrow="Dress code" title="¿Qué me pongo?" />
+        <p className="text-center mb-10" style={{ fontFamily: FONT_HAND, color: THEME.brick, fontSize: 20 }}>
+          Tema: {CONFIG.dressCode.tema}
+        </p>
+      </Reveal>
+      <div className="grid sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+        <Card>
+          <p style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 20 }} className="mb-3">
+            Se recomienda
+          </p>
+          {CONFIG.dressCode.recomendado.map((r, i) => (
+            <p key={i} style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }} className="mb-1">
+              ✦ {r}
+            </p>
+          ))}
+        </Card>
+        <Card>
+          <p style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 20 }} className="mb-3">
+            Evitar
+          </p>
+          {CONFIG.dressCode.evitar.map((r, i) => (
+            <p key={i} style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }} className="mb-1">
+              ✧ {r}
+            </p>
+          ))}
+        </Card>
+      </div>
+      <p className="text-center mt-8 italic max-w-md mx-auto" style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }}>
+        No hace falta comprar ropa nueva. Usá lo que ya tenés y adaptalo al estilo de la celebración.
+      </p>
+    </section>
+  );
+}
+
+function Regalos() {
+  const cols = [
+    ["Algo que pueda usar", CONFIG.regalos.usar],
+    ["Algo creativo", CONFIG.regalos.creativo],
+    ["Lista de deseos", CONFIG.regalos.deseos],
+    ["Experiencias", CONFIG.regalos.experiencias],
+  ];
+  return (
+    <section id="regalos" className="px-6 py-24 relative overflow-hidden" style={{ background: THEME.cream }}>
+      <JasmineFlower style={{ bottom: "-6%", left: "-4%" }} size={110} rotate={-12} />
+      <Reveal>
+        <SectionTitle eyebrow="Ideas" title="¿Qué puedo regalarte?" />
+        <p className="text-center mb-12 max-w-md mx-auto" style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }}>
+          Tu presencia ya es un regalo. Pero si igualmente querés traerme algo, acá tenés algunas ideas.
+        </p>
+      </Reveal>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-4xl mx-auto mb-14">
+        {cols.map(([title, items]) => (
+          <Card key={title}>
+            <p style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 18 }} className="mb-3">
+              {title}
+            </p>
+            {items.map((it, i) => (
+              <p key={i} style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 14 }} className="mb-1">
+                • {it}
+              </p>
+            ))}
+          </Card>
+        ))}
+      </div>
+      <Reveal>
+        <Card style={{ maxWidth: 480, margin: "0 auto", textAlign: "center", background: THEME.maroon }}>
+          <p style={{ fontFamily: FONT_HAND, color: THEME.blush, fontSize: 22 }} className="mb-3">
+            El regalo más especial
+          </p>
+          <p style={{ fontFamily: FONT_BODY, color: THEME.cream, lineHeight: 1.7 }}>
+            Escribime una carta. No importa si son cinco páginas o solamente cinco líneas. Quiero tener algo que
+            pueda volver a leer cuando este cumpleaños ya sea un recuerdo.
+          </p>
+        </Card>
+      </Reveal>
+    </section>
+  );
+}
+
+function ComidaYBebida() {
+  const cols = [
+    ["Comida", CONFIG.comida.comida],
+    ["Bebidas", CONFIG.comida.bebidas],
+    ["Postre", CONFIG.comida.postre],
+  ];
+  return (
+    <section className="px-6 py-24" style={{ background: THEME.creamSoft }}>
+      <Reveal>
+        <SectionTitle eyebrow="Menú" title="Comida y bebidas" />
+      </Reveal>
+      <div className="grid sm:grid-cols-3 gap-5 max-w-3xl mx-auto">
+        {cols.map(([title, items]) => (
+          <Card key={title}>
+            <p style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 18 }} className="mb-3">
+              {title}
+            </p>
+            {items.map((it, i) => (
+              <p key={i} style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 14 }} className="mb-1">
+                • {it}
+              </p>
+            ))}
+          </Card>
+        ))}
+      </div>
+      <p className="text-center mt-8 max-w-md mx-auto" style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }}>
+        ¿Tenés alguna alergia, intolerancia o restricción alimentaria? Avisame antes del evento para poder tenerlo
+        en cuenta.
+      </p>
+    </section>
+  );
+}
+
+function ComoLlegar() {
+  const blocks = [["En auto", CONFIG.comoLlegar.auto]];
+  return (
+    <section id="ubicacion" className="px-6 py-24" style={{ background: THEME.cream }}>
+      <Reveal>
+        <SectionTitle eyebrow="Llegada" title="¿Dónde es?" />
+        <div className="text-center mb-10">
+          <p style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 22 }}>{CONFIG.lugarNombre}</p>
+          <p style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }}>{CONFIG.direccion}</p>
+        </div>
+      </Reveal>
+      <div className="grid gap-5 max-w-sm mx-auto mb-10">
+        {blocks.map(([title, text]) => (
+          <Card key={title}>
+            <p style={{ fontFamily: FONT_HAND, color: THEME.brick, fontSize: 18 }} className="mb-2">
+              {title}
+            </p>
+            <p style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 14 }}>{text}</p>
+          </Card>
+        ))}
+      </div>
+      <div className="flex justify-center">
+        <a
+          href={CONFIG.googleMapsUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="px-8 py-3 rounded-full uppercase text-sm tracking-widest"
+          style={{ fontFamily: FONT_BODY, background: THEME.maroon, color: THEME.cream, letterSpacing: "0.1em" }}
+        >
+          Abrir en Google Maps →
+        </a>
+      </div>
+    </section>
+  );
+}
+
+function FotosYRedes() {
+  return (
+    <section className="px-6 py-24 text-center" style={{ background: THEME.creamSoft }}>
+      <Reveal>
+        <SectionTitle eyebrow="Recuerdos" title="Guardá el momento" />
+        <div className="flex justify-center gap-8 mb-8" style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }}>
+          <span>📷 Fotos — Sí</span>
+          <span>🎥 Videos — Sí</span>
+        </div>
+        <p style={{ fontFamily: FONT_DISPLAY, color: THEME.maroon, fontSize: 34 }}>{CONFIG.hashtag}</p>
+        <a
+          href={CONFIG.albumUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-block mt-8 px-8 py-3 rounded-full uppercase text-sm tracking-widest"
+          style={{ fontFamily: FONT_BODY, background: THEME.maroon, color: THEME.cream, letterSpacing: "0.1em" }}
+        >
+          Subir fotos al álbum →
+        </a>
+        <p className="mt-6 max-w-sm mx-auto" style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }}>
+          ¿Sacaste una foto buena? Sumala al álbum de la fiesta.
+        </p>
+      </Reveal>
+    </section>
+  );
+}
+
+function AntesDeVenir() {
+  return (
+    <section className="px-6 py-24" style={{ background: THEME.cream }}>
+      <Reveal>
+        <SectionTitle title="Antes de venir" />
+        <div className="max-w-md mx-auto flex flex-col gap-3 mb-8">
+          {CONFIG.antesDeVenir.map((item, i) => (
+            <p key={i} style={{ fontFamily: FONT_BODY, color: THEME.inkSoft }}>
+              ✦ {item}
+            </p>
+          ))}
+        </div>
+        <p className="text-center" style={{ fontFamily: FONT_HAND, color: THEME.brick, fontSize: 26 }}>
+          Vení a pasarla bien.
+        </p>
+      </Reveal>
+    </section>
+  );
+}
+
+function FAQ() {
+  const [open, setOpen] = useState(null);
+  return (
+    <section className="px-6 py-24" style={{ background: THEME.creamSoft }}>
+      <Reveal>
+        <SectionTitle eyebrow="Dudas" title="Preguntas frecuentes" />
+      </Reveal>
+      <div className="max-w-xl mx-auto flex flex-col gap-3">
+        {CONFIG.faqs.map((f, i) => (
+          <div key={i} className="rounded-xl overflow-hidden" style={{ border: `2px solid ${THEME.maroon}22` }}>
+            <button
+              onClick={() => setOpen(open === i ? null : i)}
+              className="w-full text-left px-5 py-4 flex justify-between items-center"
+              style={{ fontFamily: FONT_HAND, color: THEME.maroon, fontSize: 17, background: THEME.cream }}
+            >
+              {f.pregunta}
+              <span style={{ color: THEME.brick }}>{open === i ? "−" : "+"}</span>
+            </button>
+            <div
+              style={{
+                maxHeight: open === i ? 200 : 0,
+                overflow: "hidden",
+                transition: "max-height 0.3s ease",
+                background: THEME.cream,
+              }}
+            >
+              <p className="px-5 pb-4" style={{ fontFamily: FONT_BODY, color: THEME.inkSoft, fontSize: 14 }}>
+                {f.respuesta}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function Cierre() {
+  return (
+    <section
+      className="px-6 py-28 text-center relative overflow-hidden"
+      style={{
+        background: `repeating-linear-gradient(90deg, ${THEME.maroonDeep} 0px, ${THEME.maroonDeep} 26px, ${THEME.maroon} 26px, ${THEME.maroon} 52px)`,
+      }}
+    >
+      <Star style={{ top: "12%", left: "14%" }} />
+      <Star style={{ bottom: "14%", right: "16%" }} />
+      <JasmineFlower style={{ top: "-6%", right: "-5%" }} size={150} rotate={10} />
+      <JasmineFlower style={{ bottom: "-8%", left: "-6%" }} size={170} rotate={-18} />
+      <Reveal>
+        <p style={{ fontFamily: FONT_HAND, color: THEME.cream, fontSize: 22 }}>Gracias por formar parte de mi historia.</p>
+        <p style={{ fontFamily: FONT_HAND, color: THEME.cream, fontSize: 22, marginBottom: 16 }}>Espero verte ahí.</p>
+        <p style={{ fontFamily: FONT_DISPLAY, color: THEME.blush, fontSize: 56 }}>{CONFIG.nombre}</p>
+        <p style={{ fontFamily: FONT_BODY, color: THEME.cream, opacity: 0.85, marginTop: 4 }}>{CONFIG.fecha}</p>
+        <p style={{ fontFamily: FONT_BODY, color: THEME.blush, marginTop: 20, letterSpacing: "0.2em" }} className="text-xs uppercase">
+          ✦ Fin de la invitación ✦
+        </p>
+      </Reveal>
+    </section>
+  );
+}
+
+/* ============================================================================
+   6) COMPONENTE PRINCIPAL
+   ========================================================================== */
+function InvitacionCumpleanos() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > window.innerHeight * 0.8);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return (
+    <div style={{ fontFamily: FONT_BODY }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Patrick+Hand&family=Quicksand:wght@400;500;600&display=swap');
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        input::placeholder, textarea::placeholder { color: ${THEME.inkSoft}; opacity: 0.6; }
+        input:focus, textarea:focus { outline: 2px solid ${THEME.brick}; }
+      `}</style>
+      <Nav activeIsScrolled={scrolled} />
+      <Hero />
+      <Invitacion />
+      <Plan />
+      <Dinamicas />
+      <Vestimenta />
+      <Regalos />
+      <ComidaYBebida />
+      <ComoLlegar />
+      <FotosYRedes />
+      <AntesDeVenir />
+      <FAQ />
+      <Cierre />
+    </div>
+  );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(<InvitacionCumpleanos />);
+</script>
+</body>
+</html>
